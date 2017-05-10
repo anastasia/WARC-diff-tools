@@ -7,7 +7,7 @@ from StringIO import StringIO
 from bs4 import BeautifulSoup
 import simhash
 import minhash
-import toggles
+from toggles import hashfunc, simhash_bytes, shingle_settings, minhash_hash_num
 
 class FakeSocket():
     def __init__(self, response_str):
@@ -48,25 +48,13 @@ def is_minified(script):
 
     return params_found or not whitespaces_found or (low_line_count and high_char_count)
 
-def get_simhash(str1, str2, simhash_bytes=None, hashfunc=None, shingle_size=None):
-    if not shingle_size:
-        shingle_size = toggles.shingle_size
-
-    if not hashfunc:
-        hashfunc = toggles.hashfunc
-
-    if not simhash_bytes:
-        simhash_bytes = toggles.simhash_bytes
-
-    shingles1 = shingle(str1, shingle_size=shingle_size)
-    shingles2 = shingle(str2, shingle_size=shingle_size)
-
+def get_simhash(shingles1, shingles2, simhash_bytes=simhash_bytes, hashfunc=hashfunc):
     simhash1 = simhash.Simhash(shingles1, f=simhash_bytes, hashfunc=hashfunc)
     simhash2 = simhash.Simhash(shingles2, f=simhash_bytes, hashfunc=hashfunc)
 
     return simhash1.distance(simhash2), simhash1.distance(simhash2)/float(simhash_bytes)
 
-def shingle(text, shingle_size=None):
+def shingle(text, shingle_settings=shingle_settings):
     """
     tokenizes and shingles
 
@@ -75,10 +63,8 @@ def shingle(text, shingle_size=None):
     everything else is shingled by word (space)
 
     """
-    if not shingle_size:
-        shingle_size = toggles.shingle_size
-
     shingles = set()
+
     if is_minified(text):
         shingle_type = 'char'
         units = list(text)
@@ -86,7 +72,7 @@ def shingle(text, shingle_size=None):
         shingle_type = 'word'
         units = text.split()
 
-    shingle_size = shingle_size[shingle_type]
+    shingle_size = shingle_settings[shingle_type]
 
     for idx in range(0, len(units) - (shingle_size - 1)):
         if shingle_type == 'word':
@@ -98,14 +84,19 @@ def shingle(text, shingle_size=None):
 
     return shingles
 
-def process_text(text, content_type="text", process_text_ruleset=0):
+def process_text(text):
     # TODO: add rules per content_type
     rx = re.compile('\s{2}')
     text = rx.sub('', text)
+    try:
+
+        text = unicode(text, 'utf-8').encode('utf-8').decode('utf-8', 'ignore')
+    except UnicodeEncodeError:
+        import ipdb; ipdb.set_trace()
     return text.lower()
 
 def get_minhash(str1, str2):
-    return minhash.calculate(str1, str2)
+    return minhash.calculate(str1, str2, total_hash_num=minhash_hash_num)
 
 def get_combined_distance(str1, str2):
     return
@@ -220,6 +211,9 @@ def find_resource_by_url(urlpath, expanded_warc):
         urls = expanded_warc[content_type].keys()
         if urlpath in urls:
             return expanded_warc[content_type][urlpath]
+
+def get_payload(urlpath, expanded_warc):
+    return find_resource_by_url(urlpath, expanded_warc)['payload']
 
 def format_content_type(content_type):
     """
