@@ -1,9 +1,29 @@
 appdirs==1.4.3
+appnope==0.1.0
+backports.shutil-get-terminal-size==1.0.0
 beautifulsoup4==4.6.0
--e git://github.com/anastasia/htmldiff.git@0de62e5a2dc6dc51220749a76419997e65773a2c#egg=htmldiff
--e git://github.com/anastasia/minhash.git@c0a8c56ca4f128f723a90481af0a3c4366ec8e98#egg=minhash
+cffi==1.10.0
+decorator==4.1.2
+enum34==1.1.6
+greenlet==0.4.12
+htmldiffer==0.25
+ipython==5.4.1
+ipython-genutils==0.2.0
+-e git://github.com/anastasia/minhash.git@e8a3bd8f918088b6373a8638d719d61e20673920#egg=minhash
 packaging==16.8
+pathlib2==2.3.0
+pexpect==4.2.1
+pickleshare==0.7.4
+prompt-toolkit==1.0.15
+ptyprocess==0.5.2
+Pygments==2.2.0
 pyparsing==2.2.0
-simhash==1.7.1
+python-hashes==0.1.dev0
+readline==6.2.4.1
+scandir==1.5
+simhash==1.8.0
+simplegeneric==0.8.1
 six==1.10.0
+traitlets==4.3.2
 warc==0.2.1
+wcwidth==0.1.7

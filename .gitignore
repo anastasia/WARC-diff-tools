@@ -1,3 +1,4 @@
 *.pyc
 *.ipynb
 assets/*
+compare_archives/*

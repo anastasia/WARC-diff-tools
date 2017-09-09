@@ -1,5 +1,4 @@
-import sys
-from htmldiff import diff
+from htmldiffer import diff
 
 from toggles import shingle_settings
 import utils
@@ -30,8 +29,9 @@ class WARCCompare:
         decompressed_payload1 = utils.decompress_payload(payload1)
         decompressed_payload2 = utils.decompress_payload(payload2)
 
-        deleted, inserted, combined = diff.text_diff(decompressed_payload1, decompressed_payload2)
-        return deleted, inserted, combined
+        d = diff.HTMLDiffer(decompressed_payload1, decompressed_payload2)
+        return d.deleted_diff, d.inserted_diff, d.combined_diff
+
 
     def calculate_similarity(self, shingle_settings=shingle_settings):
         """
