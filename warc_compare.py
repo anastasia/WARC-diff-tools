@@ -33,6 +33,7 @@ class WARCCompare:
         return d.deleted_diff, d.inserted_diff, d.combined_diff
 
 
+
     def calculate_similarity(self, shingle_settings=shingle_settings):
         """
         - checking all common resources for changes

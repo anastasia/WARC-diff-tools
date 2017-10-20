@@ -1,8 +1,8 @@
 import re
 import zlib
-import warc
-from httplib import HTTPResponse
-from StringIO import StringIO
+import warcio
+from http.client import HTTPResponse
+from io import StringIO
 from bs4 import BeautifulSoup
 import simhash
 import minhash
@@ -94,11 +94,14 @@ def process_text(text):
         import ipdb; ipdb.set_trace()
     return text.lower()
 
+
 def get_minhash(str1, str2):
     return minhash.calculate(str1, str2, total_hash_num=minhash_hash_num)
 
+
 def get_combined_distance(str1, str2):
     return
+
 
 def decompress_payload(payload):
     try:
@@ -176,29 +179,34 @@ def expand_warc(warc_path):
     organized by content type
     Each response obj consists of compressed payload and SHA1
     """
-    warc_open = warc.open(warc_path)
+
+    from warcio.archiveiterator import ArchiveIterator
+
     responses = dict()
-    for record in warc_open:
-        if record.type != 'response':
-            continue
+    with open(warc_path, 'rb') as stream:
+        for record in ArchiveIterator(stream):
+            if record.rec_type == 'response':
+                print(record.rec_headers.get_header('WARC-Target-URI'))
 
-        payload = record.payload.read()
-        headers = get_payload_headers(payload)
-        try:
-            content_type = format_content_type(headers['Content-Type'])
-        except KeyError:
-            # HACK: figure out a better solution for unknown content types
-            content_type = "unknown"
+            if record.rec_type != 'response':
+                continue
 
-        new_record =  {
-            'payload' : payload,
-            'hash': record.header.get('warc-payload-digest'),
-        }
+            payload = record.content_stream().read()
+            try:
+                content_type = record.http_headers.get('Content-Type')
+            except KeyError:
+                # HACK: figure out a better solution for unknown content types
+                content_type = "unknown"
 
-        if content_type in responses:
-            responses[content_type][record.url] = new_record
-        else:
-            responses[content_type] = { record.url: new_record }
+            new_record =  {
+                'payload': payload,
+                'hash': record.rec_headers.get('warc-payload-digest'),
+            }
+            record_url = record.rec_headers.get_header('WARC-Target-URI')
+            if content_type in responses:
+                responses[content_type][record_url] = new_record
+            else:
+                responses[content_type] = { record_url: new_record }
 
     return responses
 
